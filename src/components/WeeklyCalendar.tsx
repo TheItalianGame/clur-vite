@@ -162,21 +162,31 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
               height: dayHeight,
             }}
           >
-            {items.filter((it) => it.day === di).map((it, i) => (
-              <div
-                key={i}
-                className={`item ${it.kind}`}
-                style={{
-                  gridColumnStart: it.col,
-                  top: `${it.top}px`,
-                  height: it.kind === "circle" ? 12 : it.height,
-                  background: it.color,
-                }}
-              >
-                {it.kind === "pill" && (
-                  <span>{formatRange((it.rec as EventRecord).start, (it.rec as EventRecord).end)}</span>
-                )}
-                <div className="hover">{renderBox(it.rec, it.type)}</div>
+            {data.map((emp, ei) => (
+              <div key={emp.employee} className="emp-col">
+                {items
+                  .filter((it) => it.day === di && it.col === ei + 1)
+                  .map((it, i) => (
+                    <div
+                      key={i}
+                      className={`item ${it.kind}`}
+                      style={{
+                        top: `${it.top}px`,
+                        height: it.kind === "circle" ? 12 : it.height,
+                        background: it.color,
+                      }}
+                    >
+                      {it.kind === "pill" && (
+                        <span>
+                          {formatRange(
+                            (it.rec as EventRecord).start,
+                            (it.rec as EventRecord).end,
+                          )}
+                        </span>
+                      )}
+                      <div className="hover">{renderBox(it.rec, it.type)}</div>
+                    </div>
+                  ))}
               </div>
             ))}
           </div>
