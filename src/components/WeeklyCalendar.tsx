@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import type {
   EmployeeData,
   EventRecord,
@@ -13,7 +13,6 @@ import {
   normalizeWeekStart,
   minutesFromDayStart,
   dayIndexFromWeekStart,
-  formatRange,
 } from "../utils/date";
 import { format, addDays } from "date-fns";
 import LeadBox from "./LeadBox";
@@ -65,18 +64,22 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
             const en = toDate(ev.end);
             const day = dayIndexFromWeekStart(st, base);
 
-            out.push({
-              day,
-              col: colIdx + 1,
-              top: minutesFromDayStart(st) * (HOUR_HEIGHT / 60),
-              height: Math.max(
-                (en.getTime() - st.getTime()) / 60000 * (HOUR_HEIGHT / 60),
-                HOUR_HEIGHT / 2
-              ),
-              kind: "pill",
-              color: palette.Event,
-              rec: r,
-              type: "Event",
+            ev.employees.forEach((ename) => {
+              const idx = data.findIndex((e) => e.employee === ename);
+              if (idx === -1) return;
+              out.push({
+                day,
+                col: idx + 1,
+                top: minutesFromDayStart(st) * (HOUR_HEIGHT / 60),
+                height: Math.max(
+                  (en.getTime() - st.getTime()) / 60000 * (HOUR_HEIGHT / 60),
+                  HOUR_HEIGHT / 2
+                ),
+                kind: "pill",
+                color: palette.Event,
+                rec: r,
+                type: "Event",
+              });
             });
           } else {
             const ts =
@@ -106,6 +109,8 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
 
     return out;
   }, [data, base]);
+
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   const dayHeight = 24 * HOUR_HEIGHT;
   const days = useMemo(() =>
@@ -162,23 +167,31 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
               height: dayHeight,
             }}
           >
-            {items.filter((it) => it.day === di).map((it, i) => (
-              <div
-                key={i}
-                className={`item ${it.kind}`}
-                style={{
-                  gridColumnStart: it.col,
-                  top: `${it.top}px`,
-                  height: it.kind === "circle" ? 12 : it.height,
-                  background: it.color,
-                }}
-              >
-                {it.kind === "pill" && (
-                  <span>{formatRange((it.rec as EventRecord).start, (it.rec as EventRecord).end)}</span>
-                )}
-                <div className="hover">{renderBox(it.rec, it.type)}</div>
-              </div>
-            ))}
+            {items.filter((it) => it.day === di).map((it, i) => {
+              const isExp = expanded === i;
+              return (
+                <div
+                  key={i}
+                  className={`item ${it.kind}${isExp ? " expanded" : ""}`}
+                  style={{
+                    gridColumnStart: it.col,
+                    top: `${it.top}px`,
+                    height: isExp ? "auto" : it.kind === "circle" ? 12 : it.height,
+                    background: isExp ? undefined : it.color,
+                    width: isExp
+                      ? 180
+                      : it.kind === "circle"
+                        ? 12
+                        : "80%",
+                    left: isExp ? 0 : it.kind === "circle" ? "50%" : "10%",
+                  }}
+                  onMouseEnter={() => setExpanded(i)}
+                  onMouseLeave={() => setExpanded(null)}
+                >
+                  {isExp ? renderBox(it.rec, it.type) : null}
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}

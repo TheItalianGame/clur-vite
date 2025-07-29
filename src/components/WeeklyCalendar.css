@@ -5,6 +5,7 @@
   overflow: auto;
   display: grid;
   grid-template-columns: 50px repeat(7, 1fr);
+  width: 100%;
 }
 
 .time-col {
@@ -57,15 +58,19 @@
 
 .item {
   position: absolute;
-  left: 10%;
-  width: 80%;
   cursor: pointer;
-  transition: transform .18s ease;
+  transition: transform .18s ease, width .18s ease, height .18s ease;
 }
 
-.item.circle { border-radius: 50%; }
+.item.circle {
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
 .item.pill {
   border-radius: 6px;
+  left: 10%;
+  width: 80%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -75,14 +80,11 @@
 }
 
 .item:hover { transform: scale(1.15); }
+.item.circle:hover { transform: translateX(-50%) scale(1.15); }
 
-.item .hover {
-  display: none;
-  position: absolute;
-  top: 0;
-  left: 100%;
-  margin-left: 6px;
-  z-index: 20;
+.item.expanded {
+  transform: none !important;
+  z-index: 10;
+  color: inherit;
+  padding: 0;
 }
-
-.item:hover .hover { display: block; }
