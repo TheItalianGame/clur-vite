@@ -8,7 +8,7 @@ interface Props {
 
 const PatientCheckinBox: React.FC<Props> = ({ data }) => (
   <div className="record-box pcheck">
-    <strong>Patient Check‑in</strong>
+    <strong>Patient Check-in</strong>
     <div>{data.patient}</div>
     <div className="meta">{data.notes}</div>
     <div className="meta">{data.checkin}</div>
