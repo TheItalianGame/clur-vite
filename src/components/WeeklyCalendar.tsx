@@ -60,6 +60,7 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
           if (grp.type === "Event") {
             const ev = r as EventRecord;
             if (!inSameWeek(ev.start, base)) return;
+            if (!ev.employees.includes(emp.employee)) return;
 
             const st = toDate(ev.start);
             const en = toDate(ev.end);
