@@ -60,6 +60,7 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
           if (grp.type === "Event") {
             const ev = r as EventRecord;
             if (!inSameWeek(ev.start, base)) return;
+            if (!ev.employees.includes(emp.employee)) return;
 
             const st = toDate(ev.start);
             const en = toDate(ev.end);
@@ -136,6 +137,8 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
     }
   };
 
+  const colWidth = 100 / data.length;
+
   return (
     <div className="calendar">
       <div className="time-col">
@@ -167,10 +170,16 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
                 key={i}
                 className={`item ${it.kind}`}
                 style={{
-                  gridColumnStart: it.col,
                   top: `${it.top}px`,
                   height: it.kind === "circle" ? 12 : it.height,
                   background: it.color,
+                  left:
+                    it.kind === "circle"
+                      ? `calc(${(it.col - 1) * colWidth}% + ${(colWidth / 2).toFixed(
+                          2,
+                        )}% - 6px)`
+                      : `${(it.col - 1) * colWidth}%`,
+                  width: it.kind === "circle" ? "12px" : `${colWidth}%`,
                 }}
               >
                 {it.kind === "pill" && (
