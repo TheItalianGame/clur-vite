@@ -1,7 +1,9 @@
 import React, { useMemo } from "react";
-import  type {
+import type {
   EmployeeData,
   EventRecord,
+  PatientCheckinRecord,
+  LeadRecord,
   RecordKind,
   AnyRecord,
 } from "../types.ts";
@@ -45,10 +47,12 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
     ? normalizeWeekStart(weekStart)
     : normalizeWeekStart(new Date());
 
+  const dayMinutes = 24 * 60;
+
   const items = useMemo<Positioned[]>(() => {
     const out: Positioned[] = [];
 
-    data.forEach((emp, colIdx) => {
+    data.forEach((emp, empIdx) => {
       emp.records.forEach((grp) => {
         grp.records.forEach((r) => {
           if (grp.type === "Event") {
@@ -57,10 +61,13 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
 
             const st = toDate(ev.start);
             const en = toDate(ev.end);
+            const totalMin = minutesFromWeekStart(st, base);
+            const day = Math.floor(totalMin / dayMinutes);
+            const offset = totalMin - day * dayMinutes;
 
             out.push({
-              col: colIdx + 1,
-              top: minutesFromWeekStart(st, base) * (HOUR_HEIGHT / 60),
+              col: day * data.length + empIdx + 1,
+              top: offset * (HOUR_HEIGHT / 60),
               height: Math.max(
                 (en.getTime() - st.getTime()) / 60000 * (HOUR_HEIGHT / 60),
                 HOUR_HEIGHT / 2
@@ -73,16 +80,19 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
           } else {
             const ts =
               grp.type === "Patient Checkin"
-                ? (r as any).checkin
-                : (r as any).create;
+                ? (r as PatientCheckinRecord).checkin
+                : (r as LeadRecord).create;
 
             if (!inSameWeek(ts, base)) return;
 
             const d = toDate(ts);
+            const totalMin = minutesFromWeekStart(d, base);
+            const day = Math.floor(totalMin / dayMinutes);
+            const offset = totalMin - day * dayMinutes;
 
             out.push({
-              col: colIdx + 1,
-              top: minutesFromWeekStart(d, base) * (HOUR_HEIGHT / 60) - 6,
+              col: day * data.length + empIdx + 1,
+              top: offset * (HOUR_HEIGHT / 60) - 6,
               height: 12,
               kind: "circle",
               color: palette[grp.type],
@@ -95,28 +105,53 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
     });
 
     return out;
-  }, [data, base]);
+  }, [data, base, dayMinutes]);
 
-  const weekHeight = 7 * 24 * HOUR_HEIGHT;
+  const weekHeight = 24 * HOUR_HEIGHT;
 
   const renderBox = (it: Positioned) => {
     switch (it.type) {
       case "Lead":
-        return <LeadBox data={it.rec as any} />;
+        return <LeadBox data={it.rec as LeadRecord} />;
       case "Event":
-        return <EventBox data={it.rec as any} />;
+        return <EventBox data={it.rec as EventRecord} />;
       default:
-        return <PatientCheckinBox data={it.rec as any} />;
+        return (
+          <PatientCheckinBox data={it.rec as PatientCheckinRecord} />
+        );
     }
   };
 
   return (
     <>
+      <div
+        className="day-labels"
+        style={{ gridTemplateColumns: `repeat(${data.length * 7}, 1fr)` }}
+      >
+        {Array.from({ length: 7 }).map((_, dayIdx) => {
+          const d = new Date(base);
+          d.setDate(base.getDate() + dayIdx);
+          const label = d.toLocaleDateString("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+          });
+          return (
+            <div
+              key={dayIdx}
+              className="day-label"
+              style={{ gridColumn: `span ${data.length}` }}
+            >
+              {label}
+            </div>
+          );
+        })}
+      </div>
       <div className="calendar">
         <div
           className="calendar-grid"
           style={{
-            gridTemplateColumns: `repeat(${data.length}, 1fr)`,
+            gridTemplateColumns: `repeat(${data.length * 7}, 1fr)`,
             height: weekHeight,
           }}
         >
@@ -137,12 +172,17 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
         </div>
       </div>
 
-      <div className="employee-labels">
-        {data.map((emp) => (
-          <div key={emp.employee} className="label">
-            {emp.employee}
-          </div>
-        ))}
+      <div
+        className="employee-labels"
+        style={{ gridTemplateColumns: `repeat(${data.length * 7}, 1fr)` }}
+      >
+        {Array.from({ length: 7 }).flatMap((_, dayIdx) =>
+          data.map((emp) => (
+            <div key={`${dayIdx}-${emp.employee}`} className="label">
+              {emp.employee}
+            </div>
+          ))
+        )}
       </div>
     </>
   );
