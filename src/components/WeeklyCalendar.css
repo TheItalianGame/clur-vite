@@ -5,6 +5,7 @@
   overflow: auto;
   display: grid;
   grid-template-columns: 50px repeat(7, 1fr);
+  width: 100vw;
 }
 
 .time-col {
@@ -38,15 +39,23 @@
   padding: 2px 0;
 }
 
-.employee-labels {
-  display: grid;
-  grid-auto-flow: column;
+
+.employee-col {
+  position: relative;
+  padding-top: 20px;
 }
 
-.employee-labels .label {
+.employee-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
   text-align: center;
   font-size: 12px;
   font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
 }
 
 .day-grid {
@@ -57,32 +66,46 @@
 
 .item {
   position: absolute;
-  left: 10%;
-  width: 80%;
   cursor: pointer;
-  transition: transform .18s ease;
-}
-
-.item.circle { border-radius: 50%; }
-.item.pill {
-  border-radius: 6px;
+  transition: all .2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--bg-color);
+  height: var(--item-height);
+}
+
+.item.circle {
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.item.pill {
+  border-radius: 999px;
+  left: 10%;
+  width: 80%;
   color: #ffffff;
   font-size: 10px;
   padding: 0 2px;
 }
 
-.item:hover { transform: scale(1.15); }
-
-.item .hover {
+.item-content {
   display: none;
-  position: absolute;
-  top: 0;
-  left: 100%;
-  margin-left: 6px;
+}
+
+.item:hover {
+  background: transparent;
+  left: 0;
+  width: 180px;
+  height: auto;
+  border-radius: 4px;
+  transform: none;
   z-index: 20;
 }
 
-.item:hover .hover { display: block; }
+.item:hover .item-content {
+  display: block;
+}
