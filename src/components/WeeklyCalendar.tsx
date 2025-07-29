@@ -13,7 +13,6 @@ import {
   normalizeWeekStart,
   minutesFromDayStart,
   dayIndexFromWeekStart,
-  formatRange,
 } from "../utils/date";
 import { format, addDays } from "date-fns";
 import LeadBox from "./LeadBox";
@@ -65,18 +64,22 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
             const en = toDate(ev.end);
             const day = dayIndexFromWeekStart(st, base);
 
-            out.push({
-              day,
-              col: colIdx + 1,
-              top: minutesFromDayStart(st) * (HOUR_HEIGHT / 60),
-              height: Math.max(
-                (en.getTime() - st.getTime()) / 60000 * (HOUR_HEIGHT / 60),
-                HOUR_HEIGHT / 2
-              ),
-              kind: "pill",
-              color: palette.Event,
-              rec: r,
-              type: "Event",
+            ev.employees.forEach((ename) => {
+              const idx = data.findIndex((e) => e.employee === ename);
+              if (idx === -1) return;
+              out.push({
+                day,
+                col: idx + 1,
+                top: minutesFromDayStart(st) * (HOUR_HEIGHT / 60),
+                height: Math.max(
+                  (en.getTime() - st.getTime()) / 60000 * (HOUR_HEIGHT / 60),
+                  HOUR_HEIGHT / 2
+                ),
+                kind: "pill",
+                color: palette.Event,
+                rec: r,
+                type: "Event",
+              });
             });
           } else {
             const ts =
@@ -169,14 +172,11 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
                 style={{
                   gridColumnStart: it.col,
                   top: `${it.top}px`,
-                  height: it.kind === "circle" ? 12 : it.height,
-                  background: it.color,
+                  "--item-height": it.kind === "circle" ? "12px" : `${it.height}px`,
+                  "--bg-color": it.color,
                 }}
               >
-                {it.kind === "pill" && (
-                  <span>{formatRange((it.rec as EventRecord).start, (it.rec as EventRecord).end)}</span>
-                )}
-                <div className="hover">{renderBox(it.rec, it.type)}</div>
+                <div className="item-content">{renderBox(it.rec, it.type)}</div>
               </div>
             ))}
           </div>
