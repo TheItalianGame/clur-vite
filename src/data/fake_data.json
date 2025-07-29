@@ -1,0 +1,180 @@
+[
+  {
+    "employee": "Rachel M",
+    "records": [
+      {
+        "type": "Lead",
+        "records": [
+          {
+            "firstname": "eli",
+            "lastname": "baum",
+            "create": "08/01/2025 9:30AM"
+          },
+          {
+            "firstname": "john",
+            "lastname": "doe",
+            "create": "08/02/2025 2:15PM"
+          }
+        ]
+      },
+      {
+        "type": "Event",
+        "records": [
+          {
+            "title": "Project Kickoff",
+            "create": "08/01/2025 10:00AM",
+            "start": "08/02/2025 9:00AM",
+            "end": "08/02/2025 10:00AM",
+            "employees": [
+              "Rachel M"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Patient Checkin",
+        "records": [
+          {
+            "patient": "Michael Brown",
+            "checkin": "08/06/2025 9:00AM",
+            "notes": "Routine follow-up visit."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "employee": "David T",
+    "records": [
+      {
+        "type": "Lead",
+        "records": [
+          {
+            "firstname": "alice",
+            "lastname": "smith",
+            "create": "08/03/2025 11:20AM"
+          }
+        ]
+      },
+      {
+        "type": "Event",
+        "records": [
+          {
+            "title": "Quarterly Review",
+            "create": "08/04/2025 1:00PM",
+            "start": "08/05/2025 2:00PM",
+            "end": "08/05/2025 3:00PM",
+            "employees": [
+              "David T"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Patient Checkin",
+        "records": [
+          {
+            "patient": "Sarah Connor",
+            "checkin": "08/07/2025 2:30PM",
+            "notes": "Annual wellness exam, all metrics normal."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "employee": "Emily R",
+    "records": [
+      {
+        "type": "Event",
+        "records": [
+          {
+            "title": "Team Sync",
+            "create": "08/03/2025 8:45AM",
+            "start": "08/04/2025 9:00AM",
+            "end": "08/04/2025 9:30AM",
+            "employees": [
+              "Emily R"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "employee": "Michael S",
+    "records": [
+      {
+        "type": "Event",
+        "records": [
+          {
+            "title": "Client Presentation",
+            "create": "08/02/2025 11:00AM",
+            "start": "08/05/2025 2:00PM",
+            "end": "08/05/2025 3:00PM",
+            "employees": [
+              "Michael S"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "employee": "Jessica L",
+    "records": [
+      {
+        "type": "Event",
+        "records": [
+          {
+            "title": "Training Session",
+            "create": "08/03/2025 3:15PM",
+            "start": "08/06/2025 1:00PM",
+            "end": "08/06/2025 4:00PM",
+            "employees": [
+              "Jessica L"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "employee": "Brian K",
+    "records": [
+      {
+        "type": "Event",
+        "records": [
+          {
+            "title": "Product Demo",
+            "create": "08/04/2025 10:20AM",
+            "start": "08/07/2025 11:00AM",
+            "end": "08/07/2025 12:00PM",
+            "employees": [
+              "Brian K"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "employee": "Sophia P",
+    "records": [
+      {
+        "type": "Event",
+        "records": [
+          {
+            "title": "Project Review",
+            "create": "08/05/2025 2:30PM",
+            "start": "08/08/2025 3:00PM",
+            "end": "08/08/2025 4:00PM",
+            "employees": [
+              "Sophia P"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
