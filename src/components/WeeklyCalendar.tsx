@@ -13,7 +13,6 @@ import {
   normalizeWeekStart,
   minutesFromDayStart,
   dayIndexFromWeekStart,
-  formatRange,
 } from "../utils/date";
 import { format, addDays } from "date-fns";
 import LeadBox from "./LeadBox";
@@ -60,6 +59,7 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
           if (grp.type === "Event") {
             const ev = r as EventRecord;
             if (!inSameWeek(ev.start, base)) return;
+            if (!ev.employees.includes(emp.employee)) return;
 
             const st = toDate(ev.start);
             const en = toDate(ev.end);
@@ -169,14 +169,11 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
                 style={{
                   gridColumnStart: it.col,
                   top: `${it.top}px`,
-                  height: it.kind === "circle" ? 12 : it.height,
-                  background: it.color,
+                  "--item-height": it.kind === "circle" ? "12px" : `${it.height}px`,
+                  "--bg-color": it.color,
                 }}
               >
-                {it.kind === "pill" && (
-                  <span>{formatRange((it.rec as EventRecord).start, (it.rec as EventRecord).end)}</span>
-                )}
-                <div className="hover">{renderBox(it.rec, it.type)}</div>
+                <div className="item-content">{renderBox(it.rec, it.type)}</div>
               </div>
             ))}
           </div>
