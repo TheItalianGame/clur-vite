@@ -2,8 +2,11 @@ import React, { useMemo } from "react";
 import  type {
   EmployeeData,
   EventRecord,
+  LeadRecord,
+  PatientCheckinRecord,
   RecordKind,
   AnyRecord,
+  BaseRecord,
 } from "../types.ts";
 import {
   toDate,
@@ -48,7 +51,7 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
   const items = useMemo<Positioned[]>(() => {
     const out: Positioned[] = [];
 
-    data.forEach((emp, colIdx) => {
+    data.forEach((emp, empIdx) => {
       emp.records.forEach((grp) => {
         grp.records.forEach((r) => {
           if (grp.type === "Event") {
@@ -58,8 +61,12 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
             const st = toDate(ev.start);
             const en = toDate(ev.end);
 
+            const day = Math.floor(
+              minutesFromWeekStart(st, base) / (60 * 24)
+            );
+
             out.push({
-              col: colIdx + 1,
+              col: day * data.length + empIdx + 1,
               top: minutesFromWeekStart(st, base) * (HOUR_HEIGHT / 60),
               height: Math.max(
                 (en.getTime() - st.getTime()) / 60000 * (HOUR_HEIGHT / 60),
@@ -73,15 +80,19 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
           } else {
             const ts =
               grp.type === "Patient Checkin"
-                ? (r as any).checkin
-                : (r as any).create;
+                ? (r as PatientCheckinRecord).checkin
+                : (r as BaseRecord).create;
 
             if (!inSameWeek(ts, base)) return;
 
             const d = toDate(ts);
 
+            const day = Math.floor(
+              minutesFromWeekStart(d, base) / (60 * 24)
+            );
+
             out.push({
-              col: colIdx + 1,
+              col: day * data.length + empIdx + 1,
               top: minutesFromWeekStart(d, base) * (HOUR_HEIGHT / 60) - 6,
               height: 12,
               kind: "circle",
@@ -98,15 +109,16 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
   }, [data, base]);
 
   const weekHeight = 7 * 24 * HOUR_HEIGHT;
+  const totalCols = data.length * 7;
 
   const renderBox = (it: Positioned) => {
     switch (it.type) {
       case "Lead":
-        return <LeadBox data={it.rec as any} />;
+        return <LeadBox data={it.rec as LeadRecord} />;
       case "Event":
-        return <EventBox data={it.rec as any} />;
+        return <EventBox data={it.rec as EventRecord} />;
       default:
-        return <PatientCheckinBox data={it.rec as any} />;
+        return <PatientCheckinBox data={it.rec as PatientCheckinRecord} />;
     }
   };
 
@@ -116,7 +128,7 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
         <div
           className="calendar-grid"
           style={{
-            gridTemplateColumns: `repeat(${data.length}, 1fr)`,
+            gridTemplateColumns: `repeat(${totalCols}, 1fr)`,
             height: weekHeight,
           }}
         >
@@ -137,12 +149,20 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
         </div>
       </div>
 
-      <div className="employee-labels">
-        {data.map((emp) => (
-          <div key={emp.employee} className="label">
-            {emp.employee}
-          </div>
-        ))}
+      <div
+        className="employee-labels"
+        style={{ gridTemplateColumns: `repeat(${totalCols}, 1fr)` }}
+      >
+        {Array.from({ length: 7 }).map((_, day) =>
+          data.map((emp) => (
+            <div
+              key={`${day}-${emp.employee}`}
+              className="label"
+            >
+              {emp.employee}
+            </div>
+          ))
+        )}
       </div>
     </>
   );
