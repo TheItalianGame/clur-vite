@@ -13,12 +13,9 @@ import {
   normalizeWeekStart,
   minutesFromDayStart,
   dayIndexFromWeekStart,
-  formatRange,
 } from "../utils/date";
 import { format, addDays } from "date-fns";
-import LeadBox from "./LeadBox";
-import EventBox from "./EventBox";
-import PatientCheckinBox from "./PatientCheckinBox";
+import EmployeeColumn from "./EmployeeColumn";
 import "./WeeklyCalendar.css";
 
 const HOUR_HEIGHT = 40; // px per hour
@@ -65,18 +62,22 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
             const en = toDate(ev.end);
             const day = dayIndexFromWeekStart(st, base);
 
-            out.push({
-              day,
-              col: colIdx + 1,
-              top: minutesFromDayStart(st) * (HOUR_HEIGHT / 60),
-              height: Math.max(
-                (en.getTime() - st.getTime()) / 60000 * (HOUR_HEIGHT / 60),
-                HOUR_HEIGHT / 2
-              ),
-              kind: "pill",
-              color: palette.Event,
-              rec: r,
-              type: "Event",
+            ev.employees.forEach((ename) => {
+              const idx = data.findIndex((e) => e.employee === ename);
+              if (idx === -1) return;
+              out.push({
+                day,
+                col: idx + 1,
+                top: minutesFromDayStart(st) * (HOUR_HEIGHT / 60),
+                height: Math.max(
+                  (en.getTime() - st.getTime()) / 60000 * (HOUR_HEIGHT / 60),
+                  HOUR_HEIGHT / 2
+                ),
+                kind: "pill",
+                color: palette.Event,
+                rec: r,
+                type: "Event",
+              });
             });
           } else {
             const ts =
@@ -118,23 +119,6 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
     [],
   );
 
-  const abbr = (name: string): string =>
-    name
-      .split(/\s+/)
-      .map((p) => p[0])
-      .join("")
-      .toUpperCase();
-
-  const renderBox = (rec: AnyRecord, type: RecordKind) => {
-    switch (type) {
-      case "Lead":
-        return <LeadBox data={rec as LeadRecord} />;
-      case "Event":
-        return <EventBox data={rec as EventRecord} />;
-      default:
-        return <PatientCheckinBox data={rec as PatientCheckinRecord} />;
-    }
-  };
 
   return (
     <div className="calendar">
@@ -148,13 +132,6 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
       {days.map((day, di) => (
         <div key={di} className="calendar-day">
           <div className="day-header">{format(day, "EEE MM/dd")}</div>
-          <div className="employee-labels" style={{ gridTemplateColumns: `repeat(${data.length}, 1fr)` }}>
-            {data.map((emp) => (
-              <div key={emp.employee} className="label">
-                {abbr(emp.employee)}
-              </div>
-            ))}
-          </div>
           <div
             className="day-grid"
             style={{
@@ -162,22 +139,14 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
               height: dayHeight,
             }}
           >
-            {items.filter((it) => it.day === di).map((it, i) => (
-              <div
-                key={i}
-                className={`item ${it.kind}`}
-                style={{
-                  gridColumnStart: it.col,
-                  top: `${it.top}px`,
-                  height: it.kind === "circle" ? 12 : it.height,
-                  background: it.color,
-                }}
-              >
-                {it.kind === "pill" && (
-                  <span>{formatRange((it.rec as EventRecord).start, (it.rec as EventRecord).end)}</span>
+            {data.map((emp, ei) => (
+              <EmployeeColumn
+                key={emp.employee}
+                name={emp.employee}
+                items={items.filter(
+                  (it) => it.day === di && it.col === ei + 1,
                 )}
-                <div className="hover">{renderBox(it.rec, it.type)}</div>
-              </div>
+              />
             ))}
           </div>
         </div>
