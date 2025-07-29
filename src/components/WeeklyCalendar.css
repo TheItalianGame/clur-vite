@@ -1,11 +1,30 @@
 .calendar {
   position: relative;
-  height: 640px; /* 16 h × 40 px */
+  height: 640px; /* 16 h × 40 px */
   border: 1px solid #e5e7eb;
   overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
 }
 
-.calendar-grid {
+.calendar-day {
+  position: relative;
+  border-right: 1px solid #e5e7eb;
+}
+
+.calendar-day:last-child {
+  border-right: none;
+}
+
+.day-header {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 2px 0;
+}
+
+.day-grid {
   position: relative;
   display: grid;
   width: 100%;

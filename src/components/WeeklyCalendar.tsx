@@ -1,16 +1,20 @@
 import React, { useMemo } from "react";
-import  type {
+import type {
   EmployeeData,
   EventRecord,
   RecordKind,
   AnyRecord,
+  LeadRecord,
+  PatientCheckinRecord,
 } from "../types.ts";
 import {
   toDate,
-  minutesFromWeekStart,
   inSameWeek,
   normalizeWeekStart,
+  minutesFromDayStart,
+  dayIndexFromWeekStart,
 } from "../utils/date";
+import { format, addDays } from "date-fns";
 import LeadBox from "./LeadBox";
 import EventBox from "./EventBox";
 import PatientCheckinBox from "./PatientCheckinBox";
@@ -25,6 +29,7 @@ const palette: Record<RecordKind, string> = {
 };
 
 type Positioned = {
+  day: number;
   col: number;
   top: number;
   height: number;
@@ -57,10 +62,12 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
 
             const st = toDate(ev.start);
             const en = toDate(ev.end);
+            const day = dayIndexFromWeekStart(st, base);
 
             out.push({
+              day,
               col: colIdx + 1,
-              top: minutesFromWeekStart(st, base) * (HOUR_HEIGHT / 60),
+              top: minutesFromDayStart(st) * (HOUR_HEIGHT / 60),
               height: Math.max(
                 (en.getTime() - st.getTime()) / 60000 * (HOUR_HEIGHT / 60),
                 HOUR_HEIGHT / 2
@@ -73,16 +80,18 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
           } else {
             const ts =
               grp.type === "Patient Checkin"
-                ? (r as any).checkin
-                : (r as any).create;
+                ? (r as PatientCheckinRecord).checkin
+                : (r as LeadRecord).create;
 
             if (!inSameWeek(ts, base)) return;
 
             const d = toDate(ts);
+            const day = dayIndexFromWeekStart(d, base);
 
             out.push({
+              day,
               col: colIdx + 1,
-              top: minutesFromWeekStart(d, base) * (HOUR_HEIGHT / 60) - 6,
+              top: minutesFromDayStart(d) * (HOUR_HEIGHT / 60) - 6,
               height: 12,
               kind: "circle",
               color: palette[grp.type],
@@ -97,54 +106,58 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
     return out;
   }, [data, base]);
 
-  const weekHeight = 7 * 24 * HOUR_HEIGHT;
+  const dayHeight = 24 * HOUR_HEIGHT;
+  const days = useMemo(() =>
+    Array.from({ length: 7 }, (_, i) => addDays(base, i)), [base]);
 
-  const renderBox = (it: Positioned) => {
-    switch (it.type) {
+  const renderBox = (rec: AnyRecord, type: RecordKind) => {
+    switch (type) {
       case "Lead":
-        return <LeadBox data={it.rec as any} />;
+        return <LeadBox data={rec as LeadRecord} />;
       case "Event":
-        return <EventBox data={it.rec as any} />;
+        return <EventBox data={rec as EventRecord} />;
       default:
-        return <PatientCheckinBox data={it.rec as any} />;
+        return <PatientCheckinBox data={rec as PatientCheckinRecord} />;
     }
   };
 
   return (
-    <>
-      <div className="calendar">
-        <div
-          className="calendar-grid"
-          style={{
-            gridTemplateColumns: `repeat(${data.length}, 1fr)`,
-            height: weekHeight,
-          }}
-        >
-          {items.map((it, i) => (
-            <div
-              key={i}
-              className={`item ${it.kind}`}
-              style={{
-                gridColumnStart: it.col,
-                top: `${it.top}px`,
-                height: it.kind === "circle" ? 12 : it.height,
-                background: it.color,
-              }}
-            >
-              <div className="hover">{renderBox(it)}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="employee-labels">
-        {data.map((emp) => (
-          <div key={emp.employee} className="label">
-            {emp.employee}
+    <div className="calendar">
+      {days.map((day, di) => (
+        <div key={di} className="calendar-day">
+          <div className="day-header">{format(day, "EEE MM/dd")}</div>
+          <div
+            className="day-grid"
+            style={{
+              gridTemplateColumns: `repeat(${data.length}, 1fr)`,
+              height: dayHeight,
+            }}
+          >
+            {items.filter((it) => it.day === di).map((it, i) => (
+              <div
+                key={i}
+                className={`item ${it.kind}`}
+                style={{
+                  gridColumnStart: it.col,
+                  top: `${it.top}px`,
+                  height: it.kind === "circle" ? 12 : it.height,
+                  background: it.color,
+                }}
+              >
+                <div className="hover">{renderBox(it.rec, it.type)}</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    </>
+          <div className="employee-labels">
+            {data.map((emp) => (
+              <div key={emp.employee} className="label">
+                {emp.employee}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 };
 
