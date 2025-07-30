@@ -1,5 +1,6 @@
 import React from "react";
 import type { LeadRecord } from "../types";
+import Hover from "./Hover";
 import "./RecordBox.css";
 
 interface Props {
@@ -8,9 +9,7 @@ interface Props {
 
 const LeadBox: React.FC<Props> = ({ data }) => (
   <div className="record-box lead">
-    <strong>Lead</strong>
-    <div>{data.firstname} {data.lastname}</div>
-    <div className="meta">{data.create}</div>
+    <Hover record="Lead" data={data as unknown as Record<string, unknown>} />
   </div>
 );
 
