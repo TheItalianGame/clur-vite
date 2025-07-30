@@ -64,6 +64,12 @@ button:focus-visible {
   margin-bottom: 8px;
 }
 
+dialog {
+  border: none;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

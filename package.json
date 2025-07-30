@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "node server/index.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "better-sqlite3": "^12.2.0",
     "date-fns": "^4.1.0",
+    "express": "^5.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
