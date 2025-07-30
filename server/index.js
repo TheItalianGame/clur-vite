@@ -46,6 +46,33 @@ app.get('/api/employees', async (req, res) => {
   res.json(result);
 });
 
+app.get('/api/employees/simple', async (req, res) => {
+  const db = await dbPromise;
+  const rows = await db.all('SELECT name FROM employees');
+  res.json(rows.map(r => r.name));
+});
+
+app.get('/api/forms/:record/:type', async (req, res) => {
+  const { record, type } = req.params;
+  const db = await dbPromise;
+  const rec = await db.get('SELECT id FROM records WHERE name=?', [record]);
+  if (!rec) return res.status(404).end();
+  const fr = await db.get(
+    'SELECT id, label FROM form_records WHERE record_id=? AND form_type=?',
+    [rec.id, type],
+  );
+  if (!fr) return res.status(404).end();
+  const fields = await db.all(
+    `SELECT ff.id, f.name, ff.label, f.type, f.foreign_table, ff.readonly
+     FROM form_fields ff
+     JOIN fields f ON f.id=ff.field_id
+     WHERE ff.form_record_id=?
+     ORDER BY ff.sort_order`,
+    [fr.id],
+  );
+  res.json({ id: fr.id, label: fr.label, fields });
+});
+
 app.post('/api/leads', async (req, res) => {
   const db = await dbPromise;
   const { employee, firstname, lastname } = req.body;
@@ -78,6 +105,14 @@ app.post('/api/checkins', async (req, res) => {
     [empId, patient, notes, checkin, create]
   );
   res.json({ employee, patient, notes, checkin, create });
+});
+
+app.get('/api/options/:table', async (req, res) => {
+  const { table } = req.params;
+  if (!['employees'].includes(table)) return res.status(400).end();
+  const db = await dbPromise;
+  const rows = await db.all(`SELECT id, name FROM ${table}`);
+  res.json(rows);
 });
 
 const port = process.env.PORT || 3001;

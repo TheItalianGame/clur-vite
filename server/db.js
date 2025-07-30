@@ -48,6 +48,44 @@ export async function initDb() {
       created TEXT,
       FOREIGN KEY(employee_id) REFERENCES employees(id)
     );
+    CREATE TABLE IF NOT EXISTS records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE
+    );
+    CREATE TABLE IF NOT EXISTS fields (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      record_id INTEGER,
+      name TEXT,
+      type TEXT,
+      foreign_table TEXT,
+      FOREIGN KEY(record_id) REFERENCES records(id)
+    );
+    CREATE TABLE IF NOT EXISTS form_records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      record_id INTEGER,
+      form_type TEXT,
+      label TEXT,
+      FOREIGN KEY(record_id) REFERENCES records(id)
+    );
+    CREATE TABLE IF NOT EXISTS form_subtabs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      form_record_id INTEGER,
+      name TEXT,
+      sort_order INTEGER,
+      FOREIGN KEY(form_record_id) REFERENCES form_records(id)
+    );
+    CREATE TABLE IF NOT EXISTS form_fields (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      form_record_id INTEGER,
+      subtab_id INTEGER,
+      field_id INTEGER,
+      label TEXT,
+      readonly INTEGER,
+      sort_order INTEGER,
+      FOREIGN KEY(form_record_id) REFERENCES form_records(id),
+      FOREIGN KEY(subtab_id) REFERENCES form_subtabs(id),
+      FOREIGN KEY(field_id) REFERENCES fields(id)
+    );
   `);
 
   if (!exists) {

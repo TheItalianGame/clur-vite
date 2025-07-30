@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import WeeklyCalendar from "./components/WeeklyCalendar";
 import CalendarControls from "./components/CalendarControls";
-import AddLeadModal from "./components/AddLeadModal";
+import DynamicForm from "./components/DynamicForm";
 import AddEventModal from "./components/AddEventModal";
 import AddCheckinModal from "./components/AddCheckinModal";
 import type {
@@ -12,7 +12,7 @@ import type {
 } from "./types";
 import { normalizeWeekStart } from "./utils/date";
 import data from "./data/fake_data.json";
-import { addDays } from "date-fns";
+import { addDays, format } from "date-fns";
 import "./components/WeeklyCalendar.css";
 import "./components/RecordBox.css";
 
@@ -99,9 +99,15 @@ const App: React.FC = () => {
       />
       <WeeklyCalendar data={employees} weekStart={weekStart} />
       {leadOpen && (
-        <AddLeadModal
-          employees={employees.map((e) => e.employee)}
-          onSubmit={submitLead}
+        <DynamicForm
+          record="Lead"
+          onSubmit={(vals) =>
+            submitLead(vals.employee, {
+              firstname: vals.firstname,
+              lastname: vals.lastname,
+              create: format(new Date(), 'MM/dd/yyyy h:mma'),
+            })
+          }
           onClose={() => setLeadOpen(false)}
         />
       )}
