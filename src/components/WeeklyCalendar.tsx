@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 import type {
   EmployeeData,
-  EventRecord,
   RecordKind,
   AnyRecord,
+  EventRecord,
   LeadRecord,
   PatientCheckinRecord,
   CalendarItem,
@@ -16,9 +16,7 @@ import {
   dayIndexFromWeekStart,
 } from "../utils/date";
 import { format, addDays } from "date-fns";
-import LeadBox from "./LeadBox";
-import EventBox from "./EventBox";
-import PatientCheckinBox from "./PatientCheckinBox";
+import Hover from "./Hover";
 import EmployeeColumn from "./EmployeeColumn";
 import "./WeeklyCalendar.css";
 
@@ -120,16 +118,9 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
       .join("")
       .toUpperCase();
 
-  const renderBox = (rec: AnyRecord, type: RecordKind) => {
-    switch (type) {
-      case "Lead":
-        return <LeadBox data={rec as LeadRecord} />;
-      case "Event":
-        return <EventBox data={rec as EventRecord} />;
-      default:
-        return <PatientCheckinBox data={rec as PatientCheckinRecord} />;
-    }
-  };
+  const renderBox = (rec: AnyRecord, type: RecordKind) => (
+    <Hover record={type} data={rec as unknown as Record<string, unknown>} />
+  );
 
   return (
     <div className="calendar">

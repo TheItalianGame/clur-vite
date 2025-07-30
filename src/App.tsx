@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import WeeklyCalendar from "./components/WeeklyCalendar";
 import CalendarControls from "./components/CalendarControls";
-import AddLeadModal from "./components/AddLeadModal";
-import AddEventModal from "./components/AddEventModal";
 import AddCheckinModal from "./components/AddCheckinModal";
+import QuickAdd from "./components/QuickAdd";
 import type {
   EmployeeData,
   LeadRecord,
@@ -12,7 +11,7 @@ import type {
 } from "./types";
 import { normalizeWeekStart } from "./utils/date";
 import data from "./data/fake_data.json";
-import { addDays } from "date-fns";
+import { addDays, format } from "date-fns";
 import "./components/WeeklyCalendar.css";
 import "./components/RecordBox.css";
 
@@ -21,8 +20,8 @@ const initial = data as unknown as EmployeeData[];
 const App: React.FC = () => {
   const [weekStart, setWeekStart] = useState(normalizeWeekStart(new Date()));
   const [employees, setEmployees] = useState<EmployeeData[]>(initial);
-  const [leadOpen, setLeadOpen] = useState(false);
-  const [eventOpen, setEventOpen] = useState(false);
+  const [recordsList, setRecordsList] = useState<string[]>([]);
+  const [quickAdd, setQuickAdd] = useState<string | null>(null);
   const [checkinOpen, setCheckinOpen] = useState(false);
 
   useEffect(() => {
@@ -33,6 +32,9 @@ const App: React.FC = () => {
         // fall back to bundled data
         setEmployees(initial);
       });
+    fetch('/api/records')
+      .then((r) => r.json())
+      .then((d) => setRecordsList(d));
   }, []);
 
   const addRecord = (
@@ -58,22 +60,35 @@ const App: React.FC = () => {
     );
   };
 
-  const submitLead = async (emp: string, rec: LeadRecord) => {
-    await fetch('/api/leads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ employee: emp, firstname: rec.firstname, lastname: rec.lastname }),
-    });
-    addRecord(emp, 'Lead', rec);
-  };
-
-  const submitEvent = async (emps: string[], rec: EventRecord) => {
-    await fetch('/api/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: rec.title, start: rec.start, end: rec.end, employees: emps }),
-    });
-    emps.forEach((e) => addRecord(e, 'Event', rec));
+  const submitRecord = async (record: string, data: Record<string, string>) => {
+    if (record === 'Lead') {
+      const rec: LeadRecord = {
+        firstname: data.firstname,
+        lastname: data.lastname,
+        create: format(new Date(), 'MM/dd/yyyy h:mma'),
+      };
+      await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee: data.employee, firstname: rec.firstname, lastname: rec.lastname }),
+      });
+      addRecord(data.employee, 'Lead', rec);
+    } else if (record === 'Event') {
+      const employees = (data.employees || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const rec: EventRecord = {
+        title: data.title,
+        start: data.start,
+        end: data.end,
+        create: format(new Date(), 'MM/dd/yyyy h:mma'),
+        employees,
+      };
+      await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: rec.title, start: rec.start, end: rec.end, employees }),
+      });
+      employees.forEach((e) => addRecord(e, 'Event', rec));
+    }
   };
 
   const submitCheckin = async (emp: string, rec: PatientCheckinRecord) => {
@@ -93,23 +108,18 @@ const App: React.FC = () => {
       <CalendarControls
         onPrev={prevWeek}
         onNext={nextWeek}
-        onAddLead={() => setLeadOpen(true)}
-        onAddEvent={() => setEventOpen(true)}
-        onAddCheckin={() => setCheckinOpen(true)}
+        records={recordsList.filter((r) => r !== 'Employee')}
+        onAdd={(rec) => {
+          if (rec === 'Patient Checkin') setCheckinOpen(true);
+          else setQuickAdd(rec);
+        }}
       />
       <WeeklyCalendar data={employees} weekStart={weekStart} />
-      {leadOpen && (
-        <AddLeadModal
-          employees={employees.map((e) => e.employee)}
-          onSubmit={submitLead}
-          onClose={() => setLeadOpen(false)}
-        />
-      )}
-      {eventOpen && (
-        <AddEventModal
-          employees={employees.map((e) => e.employee)}
-          onSubmit={submitEvent}
-          onClose={() => setEventOpen(false)}
+      {quickAdd && (
+        <QuickAdd
+          record={quickAdd}
+          onSubmit={(d) => submitRecord(quickAdd, d)}
+          onClose={() => setQuickAdd(null)}
         />
       )}
       {checkinOpen && (
