@@ -1,11 +1,8 @@
 import React, { useMemo } from "react";
 import type {
   EmployeeData,
-  EventRecord,
   RecordKind,
   AnyRecord,
-  LeadRecord,
-  PatientCheckinRecord,
   CalendarItem,
 } from "../types.ts";
 import {
@@ -16,9 +13,7 @@ import {
   dayIndexFromWeekStart,
 } from "../utils/date";
 import { format, addDays } from "date-fns";
-import LeadBox from "./LeadBox";
-import EventBox from "./EventBox";
-import PatientCheckinBox from "./PatientCheckinBox";
+import Hover from "./Hover";
 import EmployeeColumn from "./EmployeeColumn";
 import "./WeeklyCalendar.css";
 
@@ -49,14 +44,14 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
       emp.records.forEach((grp) => {
         grp.records.forEach((r) => {
           if (grp.type === "Event") {
-            const ev = r as EventRecord;
+            const ev = r as any;
             if (!inSameWeek(ev.start, base)) return;
 
             const st = toDate(ev.start);
             const en = toDate(ev.end);
             const day = dayIndexFromWeekStart(st, base);
 
-            ev.employees.forEach((ename) => {
+            ev.employees.forEach((ename: string) => {
               const idx = data.findIndex((e) => e.employee === ename);
               if (idx === -1) return;
               out.push({
@@ -76,8 +71,8 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
           } else {
             const ts =
               grp.type === "Patient Checkin"
-                ? (r as PatientCheckinRecord).checkin
-                : (r as LeadRecord).create;
+                ? (r as any).checkin
+                : (r as any).create;
 
             if (!inSameWeek(ts, base)) return;
 
@@ -120,16 +115,9 @@ const WeeklyCalendar: React.FC<Props> = ({ data, weekStart }) => {
       .join("")
       .toUpperCase();
 
-  const renderBox = (rec: AnyRecord, type: RecordKind) => {
-    switch (type) {
-      case "Lead":
-        return <LeadBox data={rec as LeadRecord} />;
-      case "Event":
-        return <EventBox data={rec as EventRecord} />;
-      default:
-        return <PatientCheckinBox data={rec as PatientCheckinRecord} />;
-    }
-  };
+  const renderBox = (rec: AnyRecord, type: RecordKind) => (
+    <Hover record={type} data={rec as unknown as Record<string, unknown>} />
+  );
 
   return (
     <div className="calendar">
