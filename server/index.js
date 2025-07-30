@@ -1,6 +1,8 @@
 import express from 'express';
 import { initDb } from './db.js';
 import { format } from 'date-fns';
+import { createServer as createViteServer } from 'vite';
+import path from 'path';
 
 const app = express();
 const dbPromise = initDb();
@@ -46,6 +48,12 @@ app.get('/api/employees', async (req, res) => {
   res.json(result);
 });
 
+app.get('/api/records', async (req, res) => {
+  const db = await dbPromise;
+  const rows = await db.all('SELECT name FROM records');
+  res.json(rows.map(r => r.name));
+});
+
 app.post('/api/leads', async (req, res) => {
   const db = await dbPromise;
   const { employee, firstname, lastname } = req.body;
@@ -80,5 +88,37 @@ app.post('/api/checkins', async (req, res) => {
   res.json({ employee, patient, notes, checkin, create });
 });
 
-const port = process.env.PORT || 3001;
-app.listen(port, () => console.log(`API server running on ${port}`));
+app.get('/api/form/:record/:type', async (req, res) => {
+  const db = await dbPromise;
+  const { record, type } = req.params;
+  const rec = await db.get('SELECT id FROM records WHERE name=?', [record]);
+  if (!rec) return res.status(404).json({ error: 'record not found' });
+  const form = await db.get('SELECT id, title FROM formrecord WHERE record_id=? AND form_type=?', [rec.id, type]);
+  if (!form) return res.status(404).json({ error: 'form not found' });
+  const fields = await db.all(`
+    SELECT ff.id, f.name, f.type, ff.ord, ff.readonly, st.label AS subtab
+    FROM formfields ff
+      JOIN fields f ON f.id=ff.field_id
+      LEFT JOIN formsubtabs st ON st.id=ff.subtab_id
+    WHERE ff.form_id=?
+    ORDER BY ff.ord
+  `, [form.id]);
+  res.json({ form, fields });
+});
+
+const port = process.env.PORT || 3000;
+async function start() {
+  if (process.env.NODE_ENV !== 'production') {
+    const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'custom' });
+    app.use(vite.middlewares);
+  } else {
+    const dist = path.resolve(process.cwd(), 'dist');
+    app.use(express.static(dist));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(dist, 'index.html'));
+    });
+  }
+  app.listen(port, () => console.log(`Server running on ${port}`));
+}
+
+start();
