@@ -1,0 +1,30 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-body {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 4px;
+  min-width: 240px;
+}
+
+.modal-body h3 {
+  margin-top: 0;
+}
+
+.modal-body input,
+.modal-body select {
+  display: block;
+  margin-bottom: 8px;
+  width: 100%;
+}
