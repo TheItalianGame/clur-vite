@@ -33,3 +33,14 @@ export interface EmployeeData {
 employee: string;
 records: RecordGroup[];
 }
+
+export interface CalendarItem {
+  day: number;
+  col: number;
+  top: number;
+  height: number;
+  kind: "circle" | "pill";
+  color: string;
+  rec: AnyRecord;
+  type: RecordKind;
+}
