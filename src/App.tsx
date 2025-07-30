@@ -1,84 +1,65 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import WeeklyCalendar from "./components/WeeklyCalendar";
 import CalendarControls from "./components/CalendarControls";
-import type {
-  EmployeeData,
-  LeadRecord,
-  EventRecord,
-  PatientCheckinRecord,
-} from "./types";
+import type { EmployeeData } from "./types";
 import { normalizeWeekStart } from "./utils/date";
-import data from "./data/fake_data.json";
 import { format, addDays } from "date-fns";
+import AddLeadModal from "./components/AddLeadModal";
+import AddEventModal from "./components/AddEventModal";
+import AddCheckinModal from "./components/AddCheckinModal";
 import "./components/WeeklyCalendar.css";
 import "./components/RecordBox.css";
 
-const initial = data as unknown as EmployeeData[];
-
 const App: React.FC = () => {
   const [weekStart, setWeekStart] = useState(normalizeWeekStart(new Date()));
-  const [employees, setEmployees] = useState<EmployeeData[]>(initial);
+  const [employees, setEmployees] = useState<EmployeeData[]>([]);
+  const [showLead, setShowLead] = useState(false);
+  const [showEvent, setShowEvent] = useState(false);
+  const [showCheck, setShowCheck] = useState(false);
 
-  const addRecord = (
-    empName: string,
-    type: "Lead" | "Event" | "Patient Checkin",
-    rec: LeadRecord | EventRecord | PatientCheckinRecord,
-  ) => {
-    setEmployees((prev) =>
-      prev.map((emp) => {
-        if (emp.employee !== empName) return emp;
-        const groups = [...emp.records];
-        const idx = groups.findIndex((g) => g.type === type);
-        if (idx >= 0) {
-          groups[idx] = {
-            ...groups[idx],
-            records: [...groups[idx].records, rec],
-          };
-        } else {
-          groups.push({ type, records: [rec] });
-        }
-        return { ...emp, records: groups };
+  const fetchData = async () => {
+    const resp = await fetch('/api/data');
+    const json = await resp.json();
+    setEmployees(json);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const addLead = async (emp: string, first: string, last: string) => {
+    await fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        employee: emp,
+        firstname: first,
+        lastname: last,
+        create: format(new Date(), 'MM/dd/yyyy h:mma'),
       }),
-    );
+    });
+    setShowLead(false);
+    fetchData();
   };
 
-  const addLead = () => {
-    const emp = employees[0];
-    const record: LeadRecord = {
-      firstname: "New",
-      lastname: "Lead",
-      create: format(new Date(), "MM/dd/yyyy h:mma"),
-    };
-    addRecord(emp.employee, "Lead", record);
+  const addEvent = async (data: { title: string; start: string; end: string; employees: string[] }) => {
+    await fetch('/api/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...data, create: format(new Date(), 'MM/dd/yyyy h:mma') }),
+    });
+    setShowEvent(false);
+    fetchData();
   };
 
-  const addEvent = () => {
-    const emp = employees[0];
-    const st = addDays(weekStart, 1);
-    st.setHours(9, 0, 0, 0);
-    const en = addDays(weekStart, 1);
-    en.setHours(10, 0, 0, 0);
-    const record: EventRecord = {
-      title: "New Event",
-      create: format(new Date(), "MM/dd/yyyy h:mma"),
-      start: format(st, "MM/dd/yyyy h:mma"),
-      end: format(en, "MM/dd/yyyy h:mma"),
-      employees: [emp.employee],
-    };
-    addRecord(emp.employee, "Event", record);
-  };
-
-  const addCheckin = () => {
-    const emp = employees[0];
-    const d = addDays(weekStart, 1);
-    d.setHours(12, 0, 0, 0);
-    const record: PatientCheckinRecord = {
-      patient: "New Patient",
-      notes: "Walk-in",
-      checkin: format(d, "MM/dd/yyyy h:mma"),
-      create: format(new Date(), "MM/dd/yyyy h:mma"),
-    };
-    addRecord(emp.employee, "Patient Checkin", record);
+  const addCheckin = async (emp: string, patient: string, notes: string, checkin: string) => {
+    await fetch('/api/checkin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ employee: emp, patient, notes, checkin }),
+    });
+    setShowCheck(false);
+    fetchData();
   };
 
   const nextWeek = () => setWeekStart((w) => addDays(w, 7));
@@ -89,11 +70,32 @@ const App: React.FC = () => {
       <CalendarControls
         onPrev={prevWeek}
         onNext={nextWeek}
-        onAddLead={addLead}
-        onAddEvent={addEvent}
-        onAddCheckin={addCheckin}
+        onAddLead={() => setShowLead(true)}
+        onAddEvent={() => setShowEvent(true)}
+        onAddCheckin={() => setShowCheck(true)}
       />
       <WeeklyCalendar data={employees} weekStart={weekStart} />
+      {showLead && (
+        <AddLeadModal
+          employees={employees.map(e => e.employee)}
+          onSave={addLead}
+          onClose={() => setShowLead(false)}
+        />
+      )}
+      {showEvent && (
+        <AddEventModal
+          employees={employees.map(e => e.employee)}
+          onSave={addEvent}
+          onClose={() => setShowEvent(false)}
+        />
+      )}
+      {showCheck && (
+        <AddCheckinModal
+          employees={employees.map(e => e.employee)}
+          onSave={addCheckin}
+          onClose={() => setShowCheck(false)}
+        />
+      )}
     </div>
   );
 };
