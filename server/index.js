@@ -80,5 +80,36 @@ app.post('/api/checkins', async (req, res) => {
   res.json({ employee, patient, notes, checkin, create });
 });
 
+app.get('/api/forms/:record/:type', async (req, res) => {
+  const { record, type } = req.params;
+  const db = await dbPromise;
+  const rec = await db.get('SELECT id FROM records WHERE name=?', [record]);
+  if (!rec) {
+    res.status(404).json({ error: 'record not found' });
+    return;
+  }
+  const form = await db.get(
+    'SELECT id, label FROM formrecords WHERE record_id=? AND form_type=?',
+    [rec.id, type]
+  );
+  if (!form) {
+    res.status(404).json({ error: 'form not found' });
+    return;
+  }
+  const fields = await db.all(
+    `SELECT ff.id, f.name, f.type, ff.label, ff.readonly, ff.ord, ff.subtab_id
+     FROM formfields ff
+     JOIN fields f ON f.id=ff.field_id
+     WHERE ff.form_id=?
+     ORDER BY ff.ord`,
+    [form.id]
+  );
+  const subtabs = await db.all(
+    'SELECT id, label, ord FROM formsubtabs WHERE form_id=? ORDER BY ord',
+    [form.id]
+  );
+  res.json({ ...form, form_type: type, fields, subtabs });
+});
+
 const port = process.env.PORT || 3001;
 app.listen(port, () => console.log(`API server running on ${port}`));

@@ -48,6 +48,50 @@ export async function initDb() {
       created TEXT,
       FOREIGN KEY(employee_id) REFERENCES employees(id)
     );
+
+    CREATE TABLE IF NOT EXISTS records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE,
+      table_name TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS fields (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      record_id INTEGER,
+      name TEXT,
+      type TEXT,
+      ref_table TEXT,
+      FOREIGN KEY(record_id) REFERENCES records(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS formrecords (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      record_id INTEGER,
+      form_type TEXT,
+      label TEXT,
+      FOREIGN KEY(record_id) REFERENCES records(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS formsubtabs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      form_id INTEGER,
+      label TEXT,
+      ord INTEGER,
+      FOREIGN KEY(form_id) REFERENCES formrecords(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS formfields (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      form_id INTEGER,
+      field_id INTEGER,
+      subtab_id INTEGER,
+      label TEXT,
+      ord INTEGER,
+      readonly INTEGER,
+      FOREIGN KEY(form_id) REFERENCES formrecords(id),
+      FOREIGN KEY(field_id) REFERENCES fields(id),
+      FOREIGN KEY(subtab_id) REFERENCES formsubtabs(id)
+    );
   `);
 
   if (!exists) {
@@ -92,6 +136,46 @@ export async function initDb() {
         }
       }
     }
+
+    // seed form metadata for employees
+    const recRes = await db.run(
+      "INSERT INTO records(name, table_name) VALUES ('employee', 'employees')"
+    );
+    const recId = recRes.lastID;
+    const fldRes = await db.run(
+      "INSERT INTO fields(record_id, name, type) VALUES (?, 'name', 'text')",
+      [recId]
+    );
+    const fldId = fldRes.lastID;
+    const quickRes = await db.run(
+      "INSERT INTO formrecords(record_id, form_type, label) VALUES (?, 'quickadd', 'Add Employee')",
+      [recId]
+    );
+    const hoverRes = await db.run(
+      "INSERT INTO formrecords(record_id, form_type, label) VALUES (?, 'hover', 'Employee Info')",
+      [recId]
+    );
+    const summaryRes = await db.run(
+      "INSERT INTO formrecords(record_id, form_type, label) VALUES (?, 'summary', 'Employee Summary')",
+      [recId]
+    );
+    const subRes = await db.run(
+      "INSERT INTO formsubtabs(form_id, label, ord) VALUES (?, 'General', 1)",
+      [summaryRes.lastID]
+    );
+    const subId = subRes.lastID;
+    await db.run(
+      "INSERT INTO formfields(form_id, field_id, ord, readonly, label) VALUES (?, ?, 1, 0, 'Name')",
+      [quickRes.lastID, fldId]
+    );
+    await db.run(
+      "INSERT INTO formfields(form_id, field_id, ord, readonly, label) VALUES (?, ?, 1, 1, 'Name')",
+      [hoverRes.lastID, fldId]
+    );
+    await db.run(
+      "INSERT INTO formfields(form_id, field_id, subtab_id, ord, readonly, label) VALUES (?, ?, ?, 1, 1, 'Name')",
+      [summaryRes.lastID, fldId, subId]
+    );
   }
 
   return db;
