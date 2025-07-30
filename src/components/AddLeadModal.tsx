@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Modal from './Modal';
 import type { LeadRecord } from '../types';
 import { format } from 'date-fns';
+import DynamicForm from './DynamicForm';
 
 interface Props {
   employees: string[];
@@ -11,13 +12,12 @@ interface Props {
 
 const AddLeadModal: React.FC<Props> = ({ employees, onSubmit, onClose }) => {
   const [employee, setEmployee] = useState(employees[0] || '');
-  const [firstname, setFirstname] = useState('');
-  const [lastname, setLastname] = useState('');
+  const [values, setValues] = useState<Record<string, string>>({});
 
   const submit = () => {
     const record: LeadRecord = {
-      firstname,
-      lastname,
+      firstname: values.firstname || '',
+      lastname: values.lastname || '',
       create: format(new Date(), 'MM/dd/yyyy h:mma'),
     };
     onSubmit(employee, record);
@@ -32,16 +32,7 @@ const AddLeadModal: React.FC<Props> = ({ employees, onSubmit, onClose }) => {
           <option key={e}>{e}</option>
         ))}
       </select>
-      <input
-        placeholder="First name"
-        value={firstname}
-        onChange={(e) => setFirstname(e.target.value)}
-      />
-      <input
-        placeholder="Last name"
-        value={lastname}
-        onChange={(e) => setLastname(e.target.value)}
-      />
+      <DynamicForm record="Lead" formType="quickadd" onChange={setValues} />
       <button onClick={submit}>Add</button>
     </Modal>
   );

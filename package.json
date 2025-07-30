@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "node server/index.js"
+    "server": "node server/index.js",
+    "seed:forms": "node server/scripts/add_form_data.js"
   },
   "dependencies": {
     "date-fns": "^4.1.0",

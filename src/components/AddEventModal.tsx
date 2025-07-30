@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Modal from './Modal';
 import type { EventRecord } from '../types';
 import { format } from 'date-fns';
+import DynamicForm from './DynamicForm';
 
 interface Props {
   employees: string[];
@@ -10,16 +11,14 @@ interface Props {
 }
 
 const AddEventModal: React.FC<Props> = ({ employees, onSubmit, onClose }) => {
-  const [title, setTitle] = useState('');
-  const [start, setStart] = useState('');
-  const [end, setEnd] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
+  const [values, setValues] = useState<Record<string, string>>({});
 
   const submit = () => {
     const record: EventRecord = {
-      title,
-      start: format(new Date(start), 'MM/dd/yyyy h:mma'),
-      end: format(new Date(end), 'MM/dd/yyyy h:mma'),
+      title: values.title || '',
+      start: format(new Date(values.start), 'MM/dd/yyyy h:mma'),
+      end: format(new Date(values.end), 'MM/dd/yyyy h:mma'),
       create: format(new Date(), 'MM/dd/yyyy h:mma'),
       employees: selected,
     };
@@ -30,9 +29,7 @@ const AddEventModal: React.FC<Props> = ({ employees, onSubmit, onClose }) => {
   return (
     <Modal onClose={onClose}>
       <h3>Add Event</h3>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
-      <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} />
-      <input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} />
+      <DynamicForm record="Event" formType="quickadd" onChange={setValues} />
       <select multiple value={selected} onChange={(e) => setSelected(Array.from(e.target.selectedOptions, o => o.value))}>
         {employees.map((e) => (
           <option key={e}>{e}</option>
