@@ -4,11 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node server/index.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "server": "node server/index.js"
+    "preview": "node server/index.js"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
